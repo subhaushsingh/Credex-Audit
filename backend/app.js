@@ -5,7 +5,9 @@ import morgan from "morgan";
 import hpp from 'hpp';
 import { rateLimit } from 'express-rate-limit';
 
-import { globalErrorHandler } from './middlewares/errorHandler.js';
+import { globalErrorHandler } from './middlewares/errorHandler.middleware.js';
+import { AppError } from './utils/AppError.js';
+import auditRoutes from './routes/auditRoutes.route.js'
 
 const app = express();
 
@@ -30,20 +32,19 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-app.use('*', (req, res, next) => {
-  next(AppError.notFound(`Can't find ${req.originalUrl} on this server`));
-});
 
 app.get("/health", (req, res) => {
     res.status(200).json({ status: "OK", message: "Day 1 Server is up." });
 });
 
 //Routes
-app.use('/api/v1/audit', apiLimiter, auditRoutes);
+app.use('/api/v1/audit', limiter, auditRoutes);
 
-app.use((req, res) => {
-    res.status(404).json({ success: false, message: `Route ${req.method} ${req.path} not found` })
+
+app.use((req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
+
 
 app.use(globalErrorHandler);
 
