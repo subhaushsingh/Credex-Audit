@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Palanquin:wght@100;200;300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme inline {
@@ -9,7 +10,7 @@
 
 :root {
   --background: #000000; 
-  --foreground: #f8fafc; /* Slate-50 */
+  --foreground: #f8fafc;
 }
 
 @media (prefers-color-scheme: light) {
@@ -26,4 +27,31 @@ body {
 
 html {
   scroll-behavior: smooth;
+}
+
+.palanquin-medium {
+  font-family: "Palanquin", sans-serif;
+  font-weight: 72px;
+  font-style: normal;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #350a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #3e0210;
+  border-radius: 999px;
+
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #0aa15f;
 }
