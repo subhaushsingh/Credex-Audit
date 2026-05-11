@@ -1,7 +1,6 @@
 import Groq from 'groq-sdk';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-console.log("Groq Key loaded:", !!process.env.GROQ_API_KEY);
 
 export const generateExecutiveSummary = async (auditData) => {
   const { summary, flags, credexOffer } = auditData;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2, Loader2, AlertCircle } from "lucide-react";
 
 export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data: any) => void }) {
@@ -10,6 +10,31 @@ export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data:
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedForm = localStorage.getItem("credex_formState");
+    if (savedForm) {
+      try {
+        const { savedEmail, savedSubs } = JSON.parse(savedForm);
+        if (savedEmail) setEmail(savedEmail);
+        if (savedSubs && savedSubs.length > 0) setSubscriptions(savedSubs);
+      } catch (e) {
+        console.error("Failed to parse form state", e);
+      }
+    }
+
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem(
+        "credex_formState", 
+        JSON.stringify({ savedEmail: email, savedSubs: subscriptions })
+      );
+    }
+  }, [email, subscriptions, isLoaded]);
 
   const availableTools = [
     { id: "chatgpt", name: "ChatGPT" },

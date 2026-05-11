@@ -9,7 +9,9 @@ export const generateAuditReport = async (req, res, next) => {
     const auditResults = calculateAudit(subscriptions);
     const summary = await generateExecutiveSummary(auditResults);
 
-    captureLead(email, auditResults, summary);
+    captureLead(email, auditResults, summary).catch(err =>
+      console.error('[Lead Capture Failed--from auditController]', err.message)
+    );
 
     return res.status(200).json({
       success: true,

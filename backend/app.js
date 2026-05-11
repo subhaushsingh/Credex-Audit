@@ -12,10 +12,11 @@ import auditRoutes from './routes/auditRoutes.route.js'
 const app = express();
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 100,
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
+    message: { success: false, error: { message: "Too many audits. Try again later." }}
 });
 
 app.set("trust proxy", 1);
@@ -24,8 +25,8 @@ app.use(hpp());
 app.use(limiter);
 
 app.use(cors({
-    origin: ['http://localhost:3000'],
-    credentials: true,
+  origin: process.env.ALLOWED_ORIGIN?.split(',') || ['http://localhost:3000'],
+  credentials: true,
 }));
 
 app.use(express.json({ limit: "10kb" }));

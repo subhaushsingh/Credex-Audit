@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuditForm from "../components/AuditForm";
 import AuditResults from "../components/AuditResults";
@@ -9,6 +9,37 @@ import { Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 export default function Home() {
   const [auditData, setAuditData] = useState<any | null>(null);
   const [isStarted, setIsStarted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); // Fixes Next.js hydration errors
+
+  // 1. Load state from localStorage on initial load
+  useEffect(() => {
+    setIsMounted(true);
+    const savedIsStarted = localStorage.getItem("credex_isStarted");
+    const savedAuditData = localStorage.getItem("credex_auditData");
+
+    if (savedIsStarted) setIsStarted(JSON.parse(savedIsStarted));
+    if (savedAuditData) setAuditData(JSON.parse(savedAuditData));
+  }, []);
+
+  // 2. Save state to localStorage whenever it changes
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem("credex_isStarted", JSON.stringify(isStarted));
+      localStorage.setItem("credex_auditData", JSON.stringify(auditData));
+    }
+  }, [isStarted, auditData, isMounted]);
+
+  // 3. Handle logo click to reset state without refreshing
+  const handleGoHome = (e: React.MouseEvent) => {
+    e.preventDefault(); 
+    setIsStarted(false);
+    setAuditData(null);
+    localStorage.removeItem("credex_isStarted");
+    localStorage.removeItem("credex_auditData");
+  };
+
+  // Prevent rendering until we've checked localStorage
+  if (!isMounted) return null; 
 
   return (
     <main className="min-h-screen bg-transparent text-slate-200 overflow-hidden relative font-sans">
@@ -17,14 +48,19 @@ export default function Home() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
 
-        <header className="flex items-center justify-between py-6 mb-12  ">
-          <a className="flex gap-[8px] items-center -translate-y-1" href="/" data-discover="true">
-  <svg width="36" height="37" viewBox="0 0 36 37" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-2.5">
-    <path d="M29.1273 9.94472C31.5201 11.5758 32.3367 14.4527 32.1936 17.2658C32.0483 20.1199 30.928 23.2817 28.9699 26.1543C27.0117 29.027 24.4777 31.226 21.8741 32.4045C19.3079 33.5658 16.3315 33.8572 13.9388 32.2262C11.5461 30.5952 10.7294 27.7182 10.8725 24.9051C11.0178 22.0509 12.1385 18.8885 14.0967 16.0158C16.055 13.1432 18.5885 10.9449 21.192 9.76646C23.7582 8.60497 26.7345 8.31367 29.1273 9.94472Z" stroke="#086841" stroke-width="4"></path>
-    <path d="M27.0331 4.86983C33.5605 9.31935 33.8542 18.9905 28.9713 26.154C24.0882 33.3176 14.9783 36.5796 8.45079 32.13C1.92339 27.6804 1.63001 18.0085 6.51312 10.845C11.3963 3.68178 20.5057 0.420458 27.0331 4.86983Z" stroke="#086841" stroke-width="4"></path>
-  </svg>
-  <p className="text-[#086841] text-[30px] font-semibold font-pp-mori-semibold mt-2 ">credex<span className="italic">Audit</span></p>
-</a>
+        <header className="flex items-center justify-between py-6 mb-12">
+          <a 
+            onClick={handleGoHome}
+            className="flex gap-[8px] items-center -translate-y-1 cursor-pointer" 
+            href="/" 
+            data-discover="true"
+          >
+            <svg width="36" height="37" viewBox="0 0 36 37" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-2.5">
+              <path d="M29.1273 9.94472C31.5201 11.5758 32.3367 14.4527 32.1936 17.2658C32.0483 20.1199 30.928 23.2817 28.9699 26.1543C27.0117 29.027 24.4777 31.226 21.8741 32.4045C19.3079 33.5658 16.3315 33.8572 13.9388 32.2262C11.5461 30.5952 10.7294 27.7182 10.8725 24.9051C11.0178 22.0509 12.1385 18.8885 14.0967 16.0158C16.055 13.1432 18.5885 10.9449 21.192 9.76646C23.7582 8.60497 26.7345 8.31367 29.1273 9.94472Z" stroke="#086841" strokeWidth="4"></path>
+              <path d="M27.0331 4.86983C33.5605 9.31935 33.8542 18.9905 28.9713 26.154C24.0882 33.3176 14.9783 36.5796 8.45079 32.13C1.92339 27.6804 1.63001 18.0085 6.51312 10.845C11.3963 3.68178 20.5057 0.420458 27.0331 4.86983Z" stroke="#086841" strokeWidth="4"></path>
+            </svg>
+            <p className="text-[#086841] text-[30px] font-semibold font-pp-mori-semibold mt-2 ">credex<span className="italic">Audit</span></p>
+          </a>
         </header>
 
         <AnimatePresence mode="wait">
@@ -49,8 +85,8 @@ export default function Home() {
                     d="M2 8 Q 50 2, 100 7 T 198 6"
                     stroke="currentColor"
                     className="text-orange-500"
-                    stroke-width="3"
-                    stroke-linecap="round"
+                    strokeWidth="3"
+                    strokeLinecap="round"
                     fill="none"
                   />
                 </svg></span> money on <br className="hidden md:block" />
@@ -128,6 +164,9 @@ export default function Home() {
                 onReset={() => {
                   setAuditData(null);
                   setIsStarted(false);
+                  localStorage.removeItem("credex_isStarted");
+                  localStorage.removeItem("credex_auditData");
+                  localStorage.removeItem("credex_formState");
                 }}
               />
             </motion.div>
