@@ -46,3 +46,12 @@
 
 **Plan for tomorrow:** 
 - Work for improvement and deployment
+
+
+## Day 3 — 2026-05-10
+**Focus:** Frontend design improvement.
+- **Data Persistance:** Data in form persist even on hard reload
+- **Bug Fixes:** Resolved the race condition between two useEffect
+
+**Plan for tomorrow:** 
+- Minor improvement and Deployement
