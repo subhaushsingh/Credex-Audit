@@ -27,7 +27,7 @@ The application was built with performance and accessibility as a priority, easi
 - Node.js (v20+)
 - Supabase Account
 - Resend API Key
-- Anthropic/OpenAI API Key
+- Groq API Key
 
 ### 1. Backend Setup
 ```bash
