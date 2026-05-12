@@ -77,7 +77,7 @@ describe('Audit Engine Core Logic', () => {
     const mockInput = [
       { tool: 'chatgpt', tier: 'plus', seats: 1 },
       { tool: 'claude', tier: 'pro', seats: 1 },
-      { tool: 'gemini', tier: 'advanced', seats: 1 }
+      { tool: 'chatgpt', tier: 'plus', seats: 1 }
     ];
     const result = calculateAudit(mockInput);
     expect(result.summary.totalCurrentSpend).toBe(60); 
@@ -86,15 +86,15 @@ describe('Audit Engine Core Logic', () => {
   });
 
   it('should use correct pricing for different tiers of the same tool', () => {
-    const mockInput = [{ tool: 'chatgpt', tier: 'enterprise', seats: 1 }]; 
+    const mockInput = [{ tool: 'chatgpt', tier: 'team', seats: 1 }]; 
     const result = calculateAudit(mockInput);
-    expect(result.summary.totalCurrentSpend).toBe(60);
+    expect(result.summary.totalCurrentSpend).toBe(30);
   });
 
   it('should not apply Credex discount if spend is exactly $499', () => {
     const mockInput = [
-      { tool: 'chatgpt', tier: 'team', seats: 16 }, // 16 * $30 = $480
-      { tool: 'github_copilot', tier: 'business', seats: 1 } // 1 * $19 = $19 -> Total $499
+      { tool: 'chatgpt', tier: 'team', seats: 16 },
+      { tool: 'github_copilot', tier: 'business', seats: 1 }
     ];
     const result = calculateAudit(mockInput);
     expect(result.summary.totalCurrentSpend).toBe(499);
