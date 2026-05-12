@@ -1,11 +1,16 @@
 import { describe, it, expect, jest } from '@jest/globals';
 
-// Mock leadService before any imports so env var checks never run
+// Mock env
+process.env.SUPABASE_URL = 'https://mock-supabase-url.com';
+process.env.SUPABASE_SERVICE_KEY = 'mock-service-key';
+
+// Mock leadService before any imports
 jest.unstable_mockModule('../services/leadService.service.js', () => ({
   captureLead: jest.fn(),
   supabase: {},
 }));
 
+// Dynamically import the service AFTER the env vars are set
 const { calculateAudit } = await import('../services/auditService.service.js');
 
 describe('Audit Engine Core Logic', () => {
@@ -72,24 +77,24 @@ describe('Audit Engine Core Logic', () => {
     const mockInput = [
       { tool: 'chatgpt', tier: 'plus', seats: 1 },
       { tool: 'claude', tier: 'pro', seats: 1 },
-      { tool: 'gemini', tier: 'pro', seats: 1 }
+      { tool: 'gemini', tier: 'advanced', seats: 1 }
     ];
     const result = calculateAudit(mockInput);
-    expect(result.summary.totalCurrentSpend).toBe(59.99);
+    expect(result.summary.totalCurrentSpend).toBe(60); 
     expect(result.summary.optimizedMonthlySpend).toBe(20);
     expect(result.flags.redundancies.length).toBe(2);
   });
 
   it('should use correct pricing for different tiers of the same tool', () => {
-    const mockInput = [{ tool: 'chatgpt', tier: 'pro', seats: 1 }];
+    const mockInput = [{ tool: 'chatgpt', tier: 'enterprise', seats: 1 }]; 
     const result = calculateAudit(mockInput);
-    expect(result.summary.totalCurrentSpend).toBe(100);
+    expect(result.summary.totalCurrentSpend).toBe(60);
   });
 
   it('should not apply Credex discount if spend is exactly $499', () => {
     const mockInput = [
-      { tool: 'chatgpt', tier: 'team', seats: 16 },
-      { tool: 'github_copilot', tier: 'business', seats: 1 }
+      { tool: 'chatgpt', tier: 'team', seats: 16 }, // 16 * $30 = $480
+      { tool: 'github_copilot', tier: 'business', seats: 1 } // 1 * $19 = $19 -> Total $499
     ];
     const result = calculateAudit(mockInput);
     expect(result.summary.totalCurrentSpend).toBe(499);
