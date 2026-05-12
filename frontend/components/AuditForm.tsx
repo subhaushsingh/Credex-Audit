@@ -11,7 +11,6 @@ export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data:
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Persist form state (subscriptions only) on reload
   useEffect(() => {
     const savedForm = localStorage.getItem("credex_formState");
     if (savedForm) {
@@ -79,8 +78,7 @@ export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data:
       if (!response.ok) throw new Error("Failed to calculate audit.");
       
       const data = await response.json();
-      
-      // Pass the entire response (which now includes the auditId) back to the parent
+
       onAuditComplete(data);
     } catch (err: any) {
       setError(err.message || "A network error occurred.");

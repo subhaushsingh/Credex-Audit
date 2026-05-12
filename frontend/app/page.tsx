@@ -154,7 +154,6 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              {/* Added auditId and isPublicView here! */}
               <AuditResults
                 data={auditData}
                 auditId={auditData.auditId} 

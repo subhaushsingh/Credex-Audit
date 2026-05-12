@@ -1,12 +1,10 @@
 import AuditResults from '@/components/AuditResults';
 import { Metadata } from 'next';
 
-// 1. Await params for Next.js 15+ compatibility
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-  
-  // 2. Added /v1 to the path
+
   const response = await fetch(`${apiUrl}/api/v1/audit/${id}`);
   if (!response.ok) return { title: 'Credex Audit' };
 

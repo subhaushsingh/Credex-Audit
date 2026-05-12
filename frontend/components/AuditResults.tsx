@@ -49,7 +49,6 @@ interface AuditPayload {
   aiSummary?: string; 
 }
 
-// 1. Updated Interface to accept the new backend response format and public view flags
 interface AuditResultsProps {
   data: { data?: AuditPayload; executiveSummary?: string } | AuditPayload;
   onReset?: () => void;
@@ -76,15 +75,13 @@ export default function AuditResults({
   auditId, 
   isPublicView = false 
 }: AuditResultsProps) {
-  
-  // States for Lead Capture
+
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Safely construct the share URL on the client side
   useEffect(() => {
     if (typeof window !== "undefined" && auditId) {
       setShareUrl(`${window.location.origin}/audit/${auditId}`);
@@ -94,7 +91,6 @@ export default function AuditResults({
   const payload: AuditPayload | null =
     "data" in data && data.data ? data.data : (data as AuditPayload);
 
-  // Extract summary from backend payload if it's outside the main data object
   const aiSummary = "executiveSummary" in data ? data.executiveSummary : payload?.aiSummary;
 
   if (!payload?.summary) {
@@ -118,7 +114,6 @@ export default function AuditResults({
   const { summary, flags, credexOffer } = payload;
   const hasInsights = flags.redundancies.length > 0 || flags.optimizations.length > 0;
 
-  // Calculate percentages for the visual graph
   const savingsPercent = summary.totalCurrentSpend > 0 
     ? Math.round(((summary.totalCurrentSpend - summary.optimizedMonthlySpend) / summary.totalCurrentSpend) * 100) 
     : 0;
@@ -129,7 +124,6 @@ export default function AuditResults({
     setIsSubmitting(true);
     
     try {
-      // NOTE: Ensure your NEXT_PUBLIC_API_URL is set in your .env.local file
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/v1/audit/capture-lead`, {
         method: 'POST',
@@ -171,7 +165,6 @@ export default function AuditResults({
       animate="show"
       className="space-y-6 w-full max-w-4xl mx-auto"
     >
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <motion.div
           variants={item}
@@ -207,7 +200,6 @@ export default function AuditResults({
         </motion.div>
       </div>
 
-      {/* 2. Visual Graph (Zero Dependency) */}
       {summary.totalCurrentSpend > 0 && (
         <motion.div variants={item} className="bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 shadow-xl">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -249,7 +241,6 @@ export default function AuditResults({
         </motion.div>
       )}
 
-      {/* Actionable Insights */}
       <motion.div variants={item}>
         {hasInsights ? (
           <div className="bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 shadow-xl">
@@ -289,7 +280,6 @@ export default function AuditResults({
         )}
       </motion.div>
 
-      {/* AI Summary */}
       {aiSummary && (
         <motion.div variants={item} className="bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 shadow-xl">
           <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -299,7 +289,6 @@ export default function AuditResults({
         </motion.div>
       )}
 
-      {/* Credex Offer */}
       <motion.div
         variants={item}
         className={`p-6 md:p-8 rounded-3xl border backdrop-blur-xl relative overflow-hidden ${
@@ -342,7 +331,6 @@ export default function AuditResults({
         </div>
       </motion.div>
 
-      {/* 3. Lead Capture & Viral Share Loop (Hidden on Public View) */}
       {!isPublicView && (
         <motion.div variants={item} className="bg-slate-900/50 p-6 md:p-8 rounded-3xl border border-white/5 shadow-2xl">
           <div className="mb-8 border-b border-white/10 pb-8">
@@ -395,7 +383,6 @@ export default function AuditResults({
         </motion.div>
       )}
 
-      {/* Reset Button (Hidden on Public View) */}
       {!isPublicView && onReset && (
         <motion.div variants={item} className="flex justify-center pt-6">
           <button

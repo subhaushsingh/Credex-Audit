@@ -81,7 +81,6 @@ export const captureLead = async (auditId, email, auditResults, summary) => {
   }
 
   try {
-    // FIX: Changed from upsert to update based on the ID we generated in Step 1
     const { data, error } = await supabase
       .from('leads')
       .update({ email: email, updated_at: new Date().toISOString() })
