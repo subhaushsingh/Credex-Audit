@@ -3,8 +3,7 @@
 Credex Audit is a free, interactive diagnostic tool designed for startup founders and engineering managers to instantly identify wasteful spending on overlapping AI subscriptions. It analyzes a user's specific tech stack, flags redundant tools, recommends optimized tier downgrades, and surfaces exclusive enterprise consolidation discounts through Credex.
 
 ## 🌐 Live Demo & Deployment
-- **Frontend (Vercel):** [Insert your Vercel URL here]
-- **Backend (Render):** [Insert your Render URL here]
+- **Frontend (Vercel):** [https://credex-audit-seven.vercel.app/](https://credex-audit-seven.vercel.app/)
 
 > ⚠️ **IMPORTANT NOTE FOR REVIEWERS:** > The backend API is hosted on Render's Free Tier, which spins down after 15 minutes of inactivity. **The very first time you click "Calculate" on the dashboard, it may take ~50 seconds for the backend to wake up and return the audit.** All subsequent requests will be instant. Thank you for your patience!
 
