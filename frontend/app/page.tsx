@@ -4,14 +4,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuditForm from "../components/AuditForm";
 import AuditResults from "../components/AuditResults";
-import { Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 
 export default function Home() {
   const [auditData, setAuditData] = useState<any | null>(null);
   const [isStarted, setIsStarted] = useState(false);
-  const [isMounted, setIsMounted] = useState(false); // Fixes Next.js hydration errors
+  const [isMounted, setIsMounted] = useState(false);
 
-  // 1. Load state from localStorage on initial load
   useEffect(() => {
     setIsMounted(true);
     const savedIsStarted = localStorage.getItem("credex_isStarted");
@@ -21,7 +19,6 @@ export default function Home() {
     if (savedAuditData) setAuditData(JSON.parse(savedAuditData));
   }, []);
 
-  // 2. Save state to localStorage whenever it changes
   useEffect(() => {
     if (isMounted) {
       localStorage.setItem("credex_isStarted", JSON.stringify(isStarted));
@@ -29,7 +26,6 @@ export default function Home() {
     }
   }, [isStarted, auditData, isMounted]);
 
-  // 3. Handle logo click to reset state without refreshing
   const handleGoHome = (e: React.MouseEvent) => {
     e.preventDefault(); 
     setIsStarted(false);
@@ -38,7 +34,6 @@ export default function Home() {
     localStorage.removeItem("credex_auditData");
   };
 
-  // Prevent rendering until we've checked localStorage
   if (!isMounted) return null; 
 
   return (
@@ -159,8 +154,11 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
+              {/* Added auditId and isPublicView here! */}
               <AuditResults
                 data={auditData}
+                auditId={auditData.auditId} 
+                isPublicView={false}
                 onReset={() => {
                   setAuditData(null);
                   setIsStarted(false);

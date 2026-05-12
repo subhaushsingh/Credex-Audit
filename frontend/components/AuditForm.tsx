@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2, Loader2, AlertCircle } from "lucide-react";
 
 export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data: any) => void }) {
-  const [email, setEmail] = useState("");
   const [subscriptions, setSubscriptions] = useState([
     { tool: "chatgpt", tier: "plus", seats: 1 }
   ]);
@@ -12,18 +11,17 @@ export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data:
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Persist form state (subscriptions only) on reload
   useEffect(() => {
     const savedForm = localStorage.getItem("credex_formState");
     if (savedForm) {
       try {
-        const { savedEmail, savedSubs } = JSON.parse(savedForm);
-        if (savedEmail) setEmail(savedEmail);
+        const { savedSubs } = JSON.parse(savedForm);
         if (savedSubs && savedSubs.length > 0) setSubscriptions(savedSubs);
       } catch (e) {
         console.error("Failed to parse form state", e);
       }
     }
-
     setIsLoaded(true);
   }, []);
 
@@ -31,10 +29,10 @@ export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data:
     if (isLoaded) {
       localStorage.setItem(
         "credex_formState", 
-        JSON.stringify({ savedEmail: email, savedSubs: subscriptions })
+        JSON.stringify({ savedSubs: subscriptions })
       );
     }
-  }, [email, subscriptions, isLoaded]);
+  }, [subscriptions, isLoaded]);
 
   const availableTools = [
     { id: "chatgpt", name: "ChatGPT" },
@@ -71,15 +69,18 @@ export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data:
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:5000/api/v1/audit/calculate", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/v1/audit/calculate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, subscriptions })
+        body: JSON.stringify({ subscriptions }) 
       });
 
       if (!response.ok) throw new Error("Failed to calculate audit.");
       
       const data = await response.json();
+      
+      // Pass the entire response (which now includes the auditId) back to the parent
       onAuditComplete(data);
     } catch (err: any) {
       setError(err.message || "A network error occurred.");
@@ -96,18 +97,6 @@ export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data:
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">Work Email</label>
-          <input 
-            type="email" 
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-            placeholder="you@company.com"
-          />
-        </div>
-
         <div className="space-y-4">
           <label className="block text-sm font-medium text-slate-300">Active Subscriptions</label>
           
@@ -184,7 +173,7 @@ export default function AuditForm({ onAuditComplete }: { onAuditComplete: (data:
           className="w-full py-4 px-4 bg-white text-black font-bold rounded-xl transition-all focus:ring-4 focus:ring-indigo-500/50 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:bg-slate-200"
         >
           {isSubmitting ? (
-            <><Loader2 size={18} className="animate-spin text-black cursor-pointer" /> Analyzing Infrastructure...</>
+            <><Loader2 size={18} className="animate-spin text-black" /> Analyzing Infrastructure...</>
           ) : "Analyze Spend"}
         </button>
       </form>

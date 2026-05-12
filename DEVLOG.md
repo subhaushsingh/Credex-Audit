@@ -48,10 +48,26 @@
 - Work for improvement and deployment
 
 
-## Day 3 — 2026-05-10
+## Day 4 — 2026-05-11
 **Focus:** Frontend design improvement.
 - **Data Persistance:** Data in form persist even on hard reload
 - **Bug Fixes:** Resolved the race condition between two useEffect
 
 **Plan for tomorrow:** 
 - Minor improvement and Deployement
+
+
+## Day 5 — 2026-05-12
+**Focus:** public url and report generation
+
+**What was accomplished today:**
+-Added Public url facility and a send report button which will email the report.
+- Added visual aid so that the comparison between the totalCurrentSpend and Optimized Target.
+- optimizedPercent is shown so that the user get insightful data.
+
+**Blockers:** 
+-As dealing with public url I had to do research on it and faced but bugs solved with help of AI and Articles.
+- Faced issue with email zod validation but fixed when the value was toggled to nullable in supabase.
+
+**Next Steps (Day 6):**
+-Deployment 

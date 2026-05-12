@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -10,6 +11,9 @@ import {
   Sparkles,
   Zap,
   BrainCircuit,
+  Send,
+  Copy,
+  BarChart3
 } from "lucide-react";
 
 interface Redundancy {
@@ -42,12 +46,15 @@ interface AuditPayload {
     optimizations: Optimization[];
   };
   credexOffer: CredexOffer;
-  aiSummary?: string;
+  aiSummary?: string; 
 }
 
+// 1. Updated Interface to accept the new backend response format and public view flags
 interface AuditResultsProps {
-  data: { data?: AuditPayload } | AuditPayload;
-  onReset: () => void;
+  data: { data?: AuditPayload; executiveSummary?: string } | AuditPayload;
+  onReset?: () => void;
+  auditId?: string;
+  isPublicView?: boolean;
 }
 
 const container = {
@@ -63,9 +70,32 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-export default function AuditResults({ data, onReset }: AuditResultsProps) {
+export default function AuditResults({ 
+  data, 
+  onReset, 
+  auditId, 
+  isPublicView = false 
+}: AuditResultsProps) {
+  
+  // States for Lead Capture
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [leadCaptured, setLeadCaptured] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  // Safely construct the share URL on the client side
+  useEffect(() => {
+    if (typeof window !== "undefined" && auditId) {
+      setShareUrl(`${window.location.origin}/audit/${auditId}`);
+    }
+  }, [auditId]);
+
   const payload: AuditPayload | null =
     "data" in data && data.data ? data.data : (data as AuditPayload);
+
+  // Extract summary from backend payload if it's outside the main data object
+  const aiSummary = "executiveSummary" in data ? data.executiveSummary : payload?.aiSummary;
 
   if (!payload?.summary) {
     return (
@@ -73,19 +103,66 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
         <p className="text-red-400 font-bold mb-4">
           Error: Invalid data received from server.
         </p>
-        <button
-          onClick={onReset}
-          className="px-4 py-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-colors"
-        >
-          Go Back
-        </button>
+        {onReset && (
+          <button
+            onClick={onReset}
+            className="px-4 py-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-colors"
+          >
+            Go Back
+          </button>
+        )}
       </div>
     );
   }
 
-  const { summary, flags, credexOffer, aiSummary } = payload;
-  const hasInsights =
-    flags.redundancies.length > 0 || flags.optimizations.length > 0;
+  const { summary, flags, credexOffer } = payload;
+  const hasInsights = flags.redundancies.length > 0 || flags.optimizations.length > 0;
+
+  // Calculate percentages for the visual graph
+  const savingsPercent = summary.totalCurrentSpend > 0 
+    ? Math.round(((summary.totalCurrentSpend - summary.optimizedMonthlySpend) / summary.totalCurrentSpend) * 100) 
+    : 0;
+  const optimizedPercent = 100 - savingsPercent;
+
+  const handleCaptureLead = async () => {
+    if (!email || !auditId) return;
+    setIsSubmitting(true);
+    
+    try {
+      // NOTE: Ensure your NEXT_PUBLIC_API_URL is set in your .env.local file
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${apiUrl}/api/v1/audit/capture-lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auditId,
+          email,
+          auditResults: payload,
+          executiveSummary: aiSummary
+        })
+      });
+
+      if (res.ok) {
+        setLeadCaptured(true);
+      } else {
+        console.error("Failed to capture lead");
+      }
+    } catch (error) {
+      console.error("Error submitting email:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+  };
 
   return (
     <motion.div
@@ -94,6 +171,7 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
       animate="show"
       className="space-y-6 w-full max-w-4xl mx-auto"
     >
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <motion.div
           variants={item}
@@ -102,12 +180,8 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
           <div className="absolute top-0 right-0 p-4 opacity-20">
             <DollarSign size={40} />
           </div>
-          <p className="text-sm font-medium text-slate-400 mb-1">
-            Current Monthly Spend
-          </p>
-          <p className="text-4xl font-bold text-white">
-            ${summary.totalCurrentSpend}
-          </p>
+          <p className="text-sm font-medium text-slate-400 mb-1">Current Monthly Spend</p>
+          <p className="text-4xl font-bold text-white">${summary.totalCurrentSpend}</p>
         </motion.div>
 
         <motion.div
@@ -117,12 +191,8 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
           <div className="absolute top-0 right-0 p-4 opacity-20">
             <CheckCircle2 size={40} className="text-emerald-400" />
           </div>
-          <p className="text-sm font-medium text-emerald-400/80 mb-1">
-            Optimized Spend
-          </p>
-          <p className="text-4xl font-bold text-emerald-400">
-            ${summary.optimizedMonthlySpend}
-          </p>
+          <p className="text-sm font-medium text-emerald-400/80 mb-1">Optimized Spend</p>
+          <p className="text-4xl font-bold text-emerald-400">${summary.optimizedMonthlySpend}</p>
         </motion.div>
 
         <motion.div
@@ -132,15 +202,54 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
           <div className="absolute top-0 right-0 p-4 opacity-20">
             <TrendingDown size={40} className="text-red-400" />
           </div>
-          <p className="text-sm font-medium text-red-400/80 mb-1">
-            Projected Annual Waste
-          </p>
-          <p className="text-4xl font-bold text-red-400">
-            ${summary.annualWaste}
-          </p>
+          <p className="text-sm font-medium text-red-400/80 mb-1">Projected Annual Waste</p>
+          <p className="text-4xl font-bold text-red-400">${summary.annualWaste}</p>
         </motion.div>
       </div>
 
+      {/* 2. Visual Graph (Zero Dependency) */}
+      {summary.totalCurrentSpend > 0 && (
+        <motion.div variants={item} className="bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 shadow-xl">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <BarChart3 className="text-blue-400" size={20} /> Spend Comparison
+          </h3>
+          <div className="space-y-5">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-slate-300 font-medium">Current Spend</span>
+                <span className="text-slate-400">${summary.totalCurrentSpend}/mo</span>
+              </div>
+              <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="h-full bg-red-500/50 rounded-full" 
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-emerald-400 font-bold">Optimized Target</span>
+                <span className="text-emerald-400 font-bold">${summary.optimizedMonthlySpend}/mo</span>
+              </div>
+              <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden flex">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${optimizedPercent}%` }}
+                  transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+                  className="h-full bg-emerald-500 rounded-full" 
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-2 text-right">
+                {savingsPercent}% potential reduction
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Actionable Insights */}
       <motion.div variants={item}>
         {hasInsights ? (
           <div className="bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 shadow-xl">
@@ -149,38 +258,24 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
             </h3>
             <ul className="space-y-4">
               {flags.redundancies.map((flag, idx) => (
-                <li
-                  key={`red-${idx}`}
-                  className="flex items-start gap-4 p-4 bg-black/20 rounded-2xl border border-white/5 hover:bg-black/30 transition-colors"
-                >
+                <li key={`red-${idx}`} className="flex items-start gap-4 p-4 bg-black/20 rounded-2xl border border-white/5 hover:bg-black/30 transition-colors">
                   <div className="bg-amber-500/20 p-2.5 rounded-xl shrink-0 border border-amber-500/20">
                     <AlertTriangle size={18} className="text-amber-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      {flag.message}
-                    </p>
-                    <p className="text-sm font-bold text-emerald-400 mt-2">
-                      Save ${flag.potentialSavings}/mo
-                    </p>
+                    <p className="text-sm text-slate-300 leading-relaxed">{flag.message}</p>
+                    <p className="text-sm font-bold text-emerald-400 mt-2">Save ${flag.potentialSavings}/mo</p>
                   </div>
                 </li>
               ))}
               {flags.optimizations.map((flag, idx) => (
-                <li
-                  key={`opt-${idx}`}
-                  className="flex items-start gap-4 p-4 bg-black/20 rounded-2xl border border-white/5 hover:bg-black/30 transition-colors"
-                >
+                <li key={`opt-${idx}`} className="flex items-start gap-4 p-4 bg-black/20 rounded-2xl border border-white/5 hover:bg-black/30 transition-colors">
                   <div className="bg-blue-500/20 p-2.5 rounded-xl shrink-0 border border-blue-500/20">
                     <TrendingDown size={18} className="text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      {flag.message}
-                    </p>
-                    <p className="text-sm font-bold text-emerald-400 mt-2">
-                      Save ${flag.potentialSavings}/mo
-                    </p>
+                    <p className="text-sm text-slate-300 leading-relaxed">{flag.message}</p>
+                    <p className="text-sm font-bold text-emerald-400 mt-2">Save ${flag.potentialSavings}/mo</p>
                   </div>
                 </li>
               ))}
@@ -189,27 +284,22 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
         ) : (
           <div className="bg-emerald-900/20 backdrop-blur-xl p-6 rounded-3xl border border-emerald-500/20 text-emerald-300 flex items-center gap-3 shadow-xl">
             <CheckCircle2 className="shrink-0" />
-            <p>
-              Your tech stack is perfectly optimized! No redundant tools
-              detected.
-            </p>
+            <p>Your tech stack is perfectly optimized! No redundant tools detected.</p>
           </div>
         )}
       </motion.div>
 
+      {/* AI Summary */}
       {aiSummary && (
-        <motion.div
-          variants={item}
-          className="bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 shadow-xl"
-        >
+        <motion.div variants={item} className="bg-white/5 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 shadow-xl">
           <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <BrainCircuit className="text-violet-400" size={20} /> AI Executive
-            Summary
+            <BrainCircuit className="text-violet-400" size={20} /> AI Executive Summary
           </h3>
           <p className="text-sm text-slate-300 leading-relaxed">{aiSummary}</p>
         </motion.div>
       )}
 
+      {/* Credex Offer */}
       <motion.div
         variants={item}
         className={`p-6 md:p-8 rounded-3xl border backdrop-blur-xl relative overflow-hidden ${
@@ -223,10 +313,7 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
         )}
 
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-white relative z-10">
-          <Sparkles
-            className={credexOffer.eligible ? "text-indigo-400" : "text-slate-500"}
-            size={20}
-          />
+          <Sparkles className={credexOffer.eligible ? "text-indigo-400" : "text-slate-500"} size={20} />
           Credex Partnership Offer
         </h3>
 
@@ -234,51 +321,92 @@ export default function AuditResults({ data, onReset }: AuditResultsProps) {
           {credexOffer.eligible ? (
             <div>
               <p className="text-indigo-200/80 mb-6 max-w-2xl text-sm leading-relaxed">
-                Because your baseline spend exceeds $500, you automatically
-                qualify for our Enterprise consolidation program. Transfer your
-                billing to Credex to unlock these rates.
+                Because your baseline spend exceeds $500, you automatically qualify for our Enterprise consolidation program. Transfer your billing to Credex to unlock these rates.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-black/30 p-5 rounded-2xl border border-indigo-500/20">
-                  <p className="text-xs text-indigo-300/70 uppercase tracking-wider mb-1 font-semibold">
-                    Discount Unlocked
-                  </p>
-                  <p className="text-3xl font-bold text-white">
-                    {credexOffer.discountPercentage}% OFF
-                  </p>
+                  <p className="text-xs text-indigo-300/70 uppercase tracking-wider mb-1 font-semibold">Discount Unlocked</p>
+                  <p className="text-3xl font-bold text-white">{credexOffer.discountPercentage}% OFF</p>
                 </div>
                 <div className="bg-black/30 p-5 rounded-2xl border border-emerald-500/20">
-                  <p className="text-xs text-emerald-400/70 uppercase tracking-wider mb-1 font-semibold">
-                    New Monthly Total
-                  </p>
-                  <p className="text-3xl font-bold text-emerald-400">
-                    ${credexOffer.estimatedMonthlyWithCredex}
-                  </p>
+                  <p className="text-xs text-emerald-400/70 uppercase tracking-wider mb-1 font-semibold">New Monthly Total</p>
+                  <p className="text-3xl font-bold text-emerald-400">${credexOffer.estimatedMonthlyWithCredex}</p>
                 </div>
               </div>
             </div>
           ) : (
             <p className="text-sm text-slate-400 leading-relaxed">
-              Spend must exceed $500/mo to qualify for the Credex Enterprise
-              consolidation discount. Optimize your current stack to save money
-              immediately!
+              Spend must exceed $500/mo to qualify for the Credex Enterprise consolidation discount. Optimize your current stack to save money immediately!
             </p>
           )}
         </div>
       </motion.div>
 
-      <motion.div variants={item} className="flex justify-center pt-6">
-        <button
-          onClick={onReset}
-          className="group flex items-center gap-2 px-6 py-3 text-slate-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white rounded-xl transition-all font-medium shadow-sm"
-        >
-          <RefreshCcw
-            size={16}
-            className="group-hover:-rotate-180 transition-transform duration-500"
-          />
-          Run Another Audit
-        </button>
-      </motion.div>
+      {/* 3. Lead Capture & Viral Share Loop (Hidden on Public View) */}
+      {!isPublicView && (
+        <motion.div variants={item} className="bg-slate-900/50 p-6 md:p-8 rounded-3xl border border-white/5 shadow-2xl">
+          <div className="mb-8 border-b border-white/10 pb-8">
+            <h3 className="text-xl font-bold text-white mb-2">Want to save this report?</h3>
+            <p className="text-sm text-slate-400 mb-6">Enter your email to get a PDF copy of these optimizations sent directly to your inbox.</p>
+            
+            {leadCaptured ? (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400">
+                <CheckCircle2 size={20} />
+                <p className="font-medium">Success! Your report is on its way to {email}.</p>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="founder@startup.com" 
+                  className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+                <button 
+                  onClick={handleCaptureLead}
+                  disabled={isSubmitting || !email}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isSubmitting ? "Sending..." : "Send Report"}
+                  {!isSubmitting && <Send size={16} />}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold text-white mb-3">Share this audit with your team</h3>
+            <div className="flex gap-3">
+              <input 
+                readOnly 
+                value={shareUrl} 
+                className="flex-1 bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-slate-400 font-mono text-sm focus:outline-none"
+              />
+              <button 
+                onClick={copyToClipboard}
+                className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-3 rounded-xl transition-colors flex items-center gap-2"
+              >
+                {copied ? <CheckCircle2 size={18} className="text-emerald-400" /> : <Copy size={18} />}
+                {copied ? "Copied" : "Copy Link"}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Reset Button (Hidden on Public View) */}
+      {!isPublicView && onReset && (
+        <motion.div variants={item} className="flex justify-center pt-6">
+          <button
+            onClick={onReset}
+            className="group flex items-center gap-2 px-6 py-3 text-slate-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white rounded-xl transition-all font-medium shadow-sm"
+          >
+            <RefreshCcw size={16} className="group-hover:-rotate-180 transition-transform duration-500" />
+            Run Another Audit
+          </button>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

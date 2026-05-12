@@ -1,4 +1,15 @@
+import { createClient } from '@supabase/supabase-js';
 import { AI_PRICING, AI_CATEGORIES } from '../utils/pricingData.js';
+
+if (!process.env.SUPABASE_URL)         throw new Error("FATAL: Missing SUPABASE_URL");
+if (!process.env.SUPABASE_SERVICE_KEY) throw new Error("FATAL: Missing SUPABASE_SERVICE_KEY");
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 export const calculateAudit = (subscriptions) => {
   let totalCurrentSpend = 0;
@@ -59,7 +70,6 @@ export const calculateAudit = (subscriptions) => {
   const credexDiscountRate = isHighSpend ? 0.30 : 0.20;
   const credexPrice = optimizedSpend * (1 - credexDiscountRate);
 
-  
   return {
     summary: {
       totalCurrentSpend: Number(totalCurrentSpend.toFixed(2)),
@@ -77,4 +87,28 @@ export const calculateAudit = (subscriptions) => {
       totalPotentialSavings: Number((totalCurrentSpend - credexPrice).toFixed(2))
     }
   };
+};
+
+export const saveAnonymousAudit = async (auditResults, summary) => {
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .insert({
+        total_spend: auditResults.summary.totalCurrentSpend,
+        optimized_spend: auditResults.summary.optimizedMonthlySpend,
+        potential_savings: auditResults.credexOffer.totalPotentialSavings,
+        annual_waste: auditResults.summary.annualWaste,
+        credex_eligible: auditResults.credexOffer.eligible,
+        executive_summary: summary,
+        audit_payload: auditResults,
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    return data.id;
+  } catch (err) {
+    console.error("[Audit Service Database Error]:", err.message);
+    return null;
+  }
 };

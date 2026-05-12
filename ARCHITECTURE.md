@@ -18,7 +18,7 @@ graph TD
 The frontend is built with Next.js (App Router) and follows a **State-Driven UI** pattern:
 
 1. **Page Layer (`app/page.tsx`):** Owns the top-level `auditData` state. Conditionally renders `AuditForm` or `AuditResults` based on whether a response has been received — a clean single-responsibility swap with no router navigation required.
-2. **Form Component (`AuditForm.tsx`):** Manages a dynamic list of subscription rows. Persists form state to `localStorage` via a custom `useLocalStorage` hook so users do not lose progress on page refresh.
+2. **Form Component (`AuditForm.tsx`):** Manages a dynamic list of subscription rows.
 3. **Results Component (`AuditResults.tsx`):** Stateless display component. Receives the full audit payload as a prop and renders metrics, redundancy flags, the Credex offer banner, and the Groq AI executive summary. Strongly typed via explicit TypeScript interfaces — no `any`.
 4. **Design System:** Glassmorphism aesthetic on a pure black (`#000000`) base using Tailwind CSS and `shadcn/ui` (Slate / New York style) to produce a premium SaaS feel.
 5. **Motion Layer:** Framer Motion staggered entry animations orchestrate the transition between landing, form, and results states.

@@ -27,6 +27,4 @@ Stop overpaying for AI — Credex Audit analyzes your current software subscript
 
 6. **State-Driven Frontend:** Built the Next.js frontend around a single `auditData` state in `page.tsx`. When null, the form renders; when populated, the results dashboard renders. No client-side routing required — the swap is instant and the mental model stays simple.
 
-7. **Form Persistence (`useLocalStorage`):** Wrapped form state in a custom `useLocalStorage` hook so users do not lose their subscription list on accidental page refresh. Small detail, meaningful UX improvement.
-
-8. **Strong Typing on the Frontend:** Replaced all `any` types in `AuditResults.tsx` with explicit TypeScript interfaces mirroring the backend response shape. Compile-time safety across the full data contract.
+7. **Strong Typing on the Frontend:** Replaced all `any` types in `AuditResults.tsx` with explicit TypeScript interfaces mirroring the backend response shape. Compile-time safety across the full data contract.
