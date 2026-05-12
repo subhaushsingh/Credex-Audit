@@ -24,8 +24,17 @@ app.use(helmet());
 app.use(hpp());
 
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN?.split(',') || ['http://localhost:3000'],
+  origin: (origin, callback) => {
+    const allowedOrigins = process.env.ALLOWED_ORIGIN?.split(',') || ['http://localhost:3000'];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new AppError('Not allowed by CORS', 403));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: "10kb" }));
