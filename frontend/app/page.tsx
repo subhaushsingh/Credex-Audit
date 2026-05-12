@@ -5,6 +5,78 @@ import { motion, AnimatePresence } from "framer-motion";
 import AuditForm from "../components/AuditForm";
 import AuditResults from "../components/AuditResults";
 
+const faqs = [
+  {
+    question: "Is this tool actually free?",
+    answer: "Yes. The audit is 100% free and doesn't even require an email to see your results. We make money by offering exclusive, discounted enterprise credits to teams that are spending heavily on AI. If we can't save you money, you pay nothing."
+  },
+  {
+    question: "Do I need to connect my AWS billing or corporate credit card?",
+    answer: "Absolutely not. Credex Audit requires zero integrations. You simply select the tools you are currently paying for from a dropdown menu, enter your seat count, and our deterministic math engine calculates the rest locally."
+  },
+  {
+    question: "What AI tools does the audit currently support?",
+    answer: "We currently track real-time pricing and feature overlap for Cursor, GitHub Copilot, Claude, ChatGPT, Anthropic API, OpenAI API, Gemini, and Windsurf."
+  },
+  {
+    question: "How does the engine decide what is a 'redundancy'?",
+    answer: "Our engine maps tools by capability rather than just brand. For example, if you pay for Cursor (an AI-native IDE), paying for GitHub Copilot on top of it is redundant for the same user. If you pay for ChatGPT Team but only have 1 user, we flag it as tier-waste."
+  },
+  {
+    question: "What are 'Credex Credits'?",
+    answer: "Credex acquires excess AI infrastructure credits from companies that over-forecasted their usage. We pass those credits onto you at a substantial discount. If your audit shows you are eligible, we can replace your retail-priced subscriptions with our discounted enterprise pool."
+  }
+];
+
+// --- NEW ANIMATED FAQ COMPONENT ---
+const FAQItem = ({ faq, index }: { faq: any, index: number }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.4 }}
+      className={`group rounded-2xl border backdrop-blur-sm transition-all duration-300 cursor-pointer overflow-hidden ${
+        isOpen 
+          ? "bg-slate-800/80 border-orange-500/50" 
+          : "bg-slate-900/50 border-slate-800/60 hover:bg-slate-800/50 hover:border-orange-500/30"
+      }`}
+      onClick={() => setIsOpen(!isOpen)}
+    >
+      <div className="p-6 flex justify-between items-center gap-4">
+        <h3 className={`text-lg font-semibold transition-colors duration-300 ${isOpen ? "text-orange-400" : "text-slate-200 group-hover:text-orange-400"}`}>
+          {faq.question}
+        </h3>
+        <motion.div
+          animate={{ rotate: isOpen ? 45 : 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-orange-500 border border-slate-700"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </motion.div>
+      </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <div className="px-6 pb-6 text-slate-400 leading-relaxed text-sm md:text-base border-t border-slate-800/50 pt-4 mt-2">
+              {faq.answer}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+// ----------------------------------
+
 export default function Home() {
   const [auditData, setAuditData] = useState<any | null>(null);
   const [isStarted, setIsStarted] = useState(false);
@@ -99,7 +171,7 @@ export default function Home() {
     group relative inline-flex items-center justify-center
     px-8 py-4 overflow-hidden rounded-xl
     font-bold text-white transition-all duration-300
-    hover:scale-105 active:scale-95"
+    hover:scale-105 active:scale-95 mb-24"
               >
                 <span
                   className="
@@ -135,6 +207,22 @@ export default function Home() {
                   </svg>
                 </span>
               </button>
+
+              {/* --- UPDATED ANIMATED FAQ SECTION --- */}
+              <div className="text-left max-w-3xl mx-auto mt-12 pt-16 relative">
+                {/* Optional subtle divider line */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[1px] bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+                
+                <h2 className="text-3xl font-bold text-white mb-10 text-center tracking-tight">Frequently Asked Questions</h2>
+                
+                <div className="space-y-4">
+                  {faqs.map((faq, index) => (
+                    <FAQItem key={index} faq={faq} index={index} />
+                  ))}
+                </div>
+              </div>
+              {/* -------------------------------------- */}
+
             </motion.div>
           ) : !auditData ? (
             <motion.div

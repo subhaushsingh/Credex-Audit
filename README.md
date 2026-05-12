@@ -1,17 +1,48 @@
-# Credex Audit
+# Credex Audit: Stop Overpaying for AI
 
-Stop overpaying for AI — Credex Audit analyzes your current software subscriptions, eliminates redundant seats, and instantly surfaces heavily discounted enterprise credits.
+Credex Audit is a free, interactive diagnostic tool designed for startup founders and engineering managers to instantly identify wasteful spending on overlapping AI subscriptions. It analyzes a user's specific tech stack, flags redundant tools, recommends optimized tier downgrades, and surfaces exclusive enterprise consolidation discounts through Credex.
 
-## Tech Stack
+## 🌐 Live Demo & Deployment
+- **Frontend (Vercel):** [Insert your Vercel URL here]
+- **Backend (Render):** [Insert your Render URL here]
 
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend** | Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui |
-| **Backend** | Node.js / Express.js |
-| **Validation** | Zod |
-| **Database** | Supabase (PostgreSQL) |
-| **AI Provider** | Groq (`llama-3.1-8b-instant`) |
-| **Email** | Resend |
+> ⚠️ **IMPORTANT NOTE FOR REVIEWERS:** > The backend API is hosted on Render's Free Tier, which spins down after 15 minutes of inactivity. **The very first time you click "Calculate" on the dashboard, it may take ~50 seconds for the backend to wake up and return the audit.** All subsequent requests will be instant. Thank you for your patience!
+
+## 📸 Interface & Performance
+
+![Credex Audit Landing Page](./assets/landing-page.png)
+*Landing page featuring a premium glassmorphism aesthetic.*
+
+### Lighthouse Validation
+The application was built with performance and accessibility as a priority, easily exceeding the assignment constraints:
+- **Performance:** 96 (LCP: 2.6s, TBT: 30ms)
+- **Accessibility:** 95
+- **Best Practices:** 100
+- **SEO:** 100
+
+![Lighthouse Scores](./assets/lighthouse.png)
+
+## 🚀 Quick Start (Local Development)
+
+### Prerequisites
+- Node.js (v20+)
+- Supabase Account
+- Resend API Key
+- Anthropic/OpenAI API Key
+
+### 1. Backend Setup
+```bash
+cd backend
+npm install
+```
+
+### 1. frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
 
 ## 🧠 Engineering Decisions & Trade-offs
 

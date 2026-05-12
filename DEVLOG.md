@@ -64,10 +64,10 @@
 -Added Public url facility and a send report button which will email the report.
 - Added visual aid so that the comparison between the totalCurrentSpend and Optimized Target.
 - optimizedPercent is shown so that the user get insightful data.
+- Deployed the Frontend on vercel -- https://credex-audit-seven.vercel.app
+- Deployed the Backend on Render -- https://credex-audit.onrender.com
 
 **Blockers:** 
--As dealing with public url I had to do research on it and faced but bugs solved with help of AI and Articles.
+- As dealing with public url I had to do research on it and faced but bugs solved with help of AI and Articles.
 - Faced issue with email zod validation but fixed when the value was toggled to nullable in supabase.
-
-**Next Steps (Day 6):**
--Deployment 
+- The free tier of render shutdowns the backend server temporarily and takes 50s to load for the first time.
