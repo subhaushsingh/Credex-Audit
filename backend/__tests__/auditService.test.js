@@ -1,5 +1,12 @@
-import { describe, it, expect } from '@jest/globals';
-import { calculateAudit } from '../services/auditService.service.js';
+import { describe, it, expect, jest } from '@jest/globals';
+
+// Mock leadService before any imports so env var checks never run
+jest.unstable_mockModule('../services/leadService.service.js', () => ({
+  captureLead: jest.fn(),
+  supabase: {},
+}));
+
+const { calculateAudit } = await import('../services/auditService.service.js');
 
 describe('Audit Engine Core Logic', () => {
 
